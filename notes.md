@@ -1,7 +1,9 @@
 ## Notes
 
-BLE scanner/tool [https://github.com/jnross/Bluetility](bluetility)
-BLE python library [https://bleak.readthedocs.io/en/latest/](bleak)
+BLE scanner/tool [Bluetility](https://github.com/jnross/Bluetility)
+BLE python library [bleak](https://bleak.readthedocs.io/en/latest/)
 
 pip install bleak
+
+
 
