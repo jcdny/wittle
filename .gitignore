@@ -47,3 +47,16 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+
+WITSampleCode/
+data/
+
+*~
+\#*
+.\#*
+
+\*.tmp
+tmp/
+
+.DS_Store
