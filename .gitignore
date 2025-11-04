@@ -56,7 +56,7 @@ data/
 \#*
 .\#*
 
-\*.tmp
+*.tmp
 tmp/
 
 .DS_Store
