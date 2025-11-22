@@ -2,6 +2,7 @@ library(lubridate, warn.conflicts=FALSE)
 library(ggplot2, warn.conflicts=FALSE)
 library(readr, warn.conflicts=FALSE)
 library(dplyr, warn.conflicts=FALSE)
+library(tictoc)
 
 ts.adj <- function(df, from, to, adj) {
     f.dt <- ymd_hms(from)
@@ -16,23 +17,35 @@ ts.adj <- function(df, from, to, adj) {
     df
 }
 
-ts.load.from <- function(from) {
+ts.load.from <- function(from=NULL) {
     files <- dir("~/src/wittle/data", pattern = "^202.*csv$")
     dates <- ymd_hms(files)
-    ii <- which(dates > from)
+
+    if (!is.null(from)) {
+        ii <- which(dates > from)
+    } else if (length(dates) > 0) {
+        ii <- 1:length(dates)
+    } else {
+        ii <- c()
+    }
 
     if (length(ii) == 0) {
         stop("No data found from", from, "onward")
+    } else {
+        cat("Loading", length(ii), "files of data\n")
     }
 
     out <- NULL
+
     for (file in files[ii]) {
         inp <- read.csv(paste0("~/src/wittle/data/", file)
                      , header=FALSE
                      , col.names=c("dt","x","y","z","ax","ay","az")
                        )
         out <- rbind(out,inp)
+
     }
+
 
     out$dt <- ymd_hms(out$dt, tz="America/Los_Angeles")
     out$day <- date(out$dt)
@@ -41,7 +54,24 @@ ts.load.from <- function(from) {
 }
 
 ts.load <- function() {
-    x <- read.csv("~/tmp/all.csv")
+    ts.load.all()
+}
+
+
+ts.load.all <- function() {
+
+    cspec <- cols(
+        dt = col_datetime(format = ""),
+        x = col_double(),
+        y = col_double(),
+        z = col_double(),
+        ax = col_double(),
+        ay = col_double(),
+        az = col_double()
+    )
+    p <- pipe("(cd ~/src/wittle/data; echo \"dt,x,y,z,ax,ay,az\"; cat `ls -1 2025*.csv | sort`)")
+    x <- read_csv(p, col_types = cspec)
+
     x$dt <- ymd_hms(x$dt)
     x$day <- date(x$dt)
 
@@ -64,15 +94,15 @@ ts.adjustments <- function(x) {
     x
 }
 
-ts.debias <- function(x) {
+ts.debias <- function(x, hours=12) {
     cat("debiasing\n")
 
     x$raw.x <- x$x
-    x$adj.x <- runmed(x$raw.x, 10*3600+1)
+    x$adj.x <- runmed(x$raw.x, hours * 3600 + 1, endrule="constant")
     x$x <- x$raw.x - x$adj.x
 
     x$raw.y <- x$y
-    x$adj.y <- runmed(x$raw.y, 10*3600+1)
+    x$adj.y <- runmed(x$raw.y, hours * 3600 + 1, endrule="constant")
     x$y <- x$raw.y - x$adj.y
 
     x
