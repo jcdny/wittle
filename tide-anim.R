@@ -6,7 +6,7 @@ H <- 1920
 SZ <- 44
 LSZ <- 3
 
-tide <- read_csv("tides.csv")
+tide <- read_csv("tides.csv.gz")
 
 tide <- tide[which(tide$dt > today() & tide$dt < (today() + dyears(1))),]
 

@@ -4,7 +4,7 @@ tic("read all")
 x <- ts.load()
 toc()
 
-tide <- read_csv("tides.csv")
+tide <- read_csv("tides.csv.gz")
 
 if (any(is.na(x$dt))) {
     x <- x[-which(is.na(x$dt)), ]
