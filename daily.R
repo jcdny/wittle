@@ -1,5 +1,7 @@
 source("util.R")
 
+DATA <- dataDir()
+
 W <- 3840
 H <- 2160
 SZ <- 44
@@ -16,14 +18,15 @@ GENFROM  <- today() - DAYS
 
 result <- x %>% group_by(day) %>% group_map(function(x,..) {
     day <- date(x$dt[1])
-    outf <- paste0("./tmp/", date(x$dt[1]), ".png")
+    outf <- paste0(DATA, "/graphs/", date(x$dt[1]), ".png")
     if (day < GENFROM
         || (file_test("-f", outf) && day < today() - 1)) {
-        cat(outf, " skipping\n")
+	## cat(outf, " skipping\n")
     } else {
         ## stop generating breaks
         ## ii <- which(abs(diff(runmed(x$x,9))) > .03)
-        ii <- c()
+
+	ii <- c()
         png(file=outf, width=W, height=H)
         g <- ggplot(x, aes(x=dt,y=runmed(x,121))) +
             geom_line(linewidth=LSZ) +

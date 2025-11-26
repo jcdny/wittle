@@ -1,14 +1,15 @@
 #!/usr/bin/env sh
+if [ -z "$DATA" ]; then
+    export DATA=/data/tilt
+fi
 
-while [ 1 ]; do
+NOW=`date "+%Y%m%d-%H%M%S"`
+OUT="$DATA/data/${NOW}.csv"
 
-    NOW=`date "+%Y%m%d-%H%M%S"`
-    OUT="data/${NOW}.csv"
 
-    echo "INFO: writing to $OUT" 1>&2
+echo "INFO: writing to $OUT" 1>&2
 
-    python wt.py --name WT901BLE68 0000FFE4-0000-1000-8000-00805F9A34FB > $OUT 2>> ~/wittle.log.err
+python $DATA/scripts/wt.py --name WT901BLE68 0000FFE4-0000-1000-8000-00805F9A34FB > $OUT 
 
-    echo "INFO: wrote `wc -l $OUT` lines" 1>&2
+echo "INFO: wrote `wc -l $OUT` lines" 1>&2
 
-done

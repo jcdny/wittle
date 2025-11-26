@@ -4,9 +4,27 @@ library(readr, warn.conflicts=FALSE)
 library(dplyr, warn.conflicts=FALSE)
 library(tictoc)
 
+dataDir <- function() {
+    DATA <- Sys.getenv("DATA")
+    if (DATA == "") {
+        for (dir in c("/data/tilt","~/data/tilt")) {
+            if (file.exists(dir)) {
+                DATA <- dir
+                break
+            }
+        }
+    }
+    if (DATA == "" || !file.exists(DATA)) {
+        stop("No data directory found ", DATA)
+    }
+
+    DATA
+}
+
 ts.adj <- function(df, from, to, adj) {
-    f.dt <- ymd_hms(from)
-    e.dt <- ymd_hms(to)
+    f.dt <- ymd_hms(from, tz="America/Los_Angeles")
+    e.dt <- ymd_hms(to, tz="America/Los_Angeles")
+
     ii <- which(df$dt > f.dt & df$dt < e.dt)
     if (any(ii)) {
         df$x[ii] <- df$x[ii] + adj
@@ -18,19 +36,21 @@ ts.adj <- function(df, from, to, adj) {
 }
 
 ts.load.from <- function(from=NULL) {
-    files <- dir("~/src/wittle/data", pattern = "^202.*csv$")
-    dates <- ymd_hms(files)
+    data.dir <- paste0(dataDir(), "/data")
+    files <- dir(data.dir, pattern = "^202.*csv$")
+    dates <- ymd_hms(files, tz="America/Los_Angeles")
+
 
     if (!is.null(from)) {
         ii <- which(dates > from)
     } else if (length(dates) > 0) {
         ii <- 1:length(dates)
     } else {
-        ii <- c()
+        stop("no files found in", data.dir)
     }
 
     if (length(ii) == 0) {
-        stop("No data found from", from, "onward")
+         stop("Last data found is ", max(dates), "want data from", from, "onward")
     } else {
         cat("Loading", length(ii), "files of data\n")
     }
@@ -38,8 +58,8 @@ ts.load.from <- function(from=NULL) {
     out <- NULL
 
     for (file in files[ii]) {
-        inp <- read.csv(paste0("~/src/wittle/data/", file)
-                     , header=FALSE
+        inp <- read.csv(paste0(data.dir, "/", file)
+                     , header=FALSE	       
                      , col.names=c("dt","x","y","z","ax","ay","az")
                        )
         out <- rbind(out,inp)
@@ -59,7 +79,7 @@ ts.load <- function() {
 
 
 ts.load.all <- function() {
-
+    data.dir <- dataDir()
     cspec <- cols(
         dt = col_datetime(format = ""),
         x = col_double(),
@@ -69,10 +89,12 @@ ts.load.all <- function() {
         ay = col_double(),
         az = col_double()
     )
-    p <- pipe("(cd ~/src/wittle/data; echo \"dt,x,y,z,ax,ay,az\"; cat `ls -1 2025*.csv | sort`)")
+    p <- pipe(paste0("(cd ", data.dir, "/data; echo \"dt,x,y,z,ax,ay,az\"; cat `ls -1 2025*.csv | sort`)"))
+
     x <- read_csv(p, col_types = cspec)
 
-    x$dt <- ymd_hms(x$dt)
+    x$dt <- ymd_hms(x$dt, tz="America/Los_Angeles")
+
     x$day <- date(x$dt)
 
     tibble(x)

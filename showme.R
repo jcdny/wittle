@@ -4,8 +4,9 @@ tic("read all")
 x <- ts.load()
 toc()
 
-tide <- read_csv("tides.csv.gz")
-
+tide <- read_csv(paste0(dataDir(), "/static/tides.csv.gz"))
+tz(tide$dt) <- "America/Los_Angeles"
+ 
 if (any(is.na(x$dt))) {
     x <- x[-which(is.na(x$dt)), ]
 }
@@ -78,7 +79,7 @@ SZ <- 44
 LSZ <- 2
 
 for (plt in names(g)) {
-    outf <- paste0("./tmp/", plt, ".png")
+    outf <- paste0(dataDir(), "/graphs/", plt, ".png")
     png(file=outf, width=W, height=H)
     print(g[[plt]] + theme_classic(base_size = SZ))
     dev.off()
