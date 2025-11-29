@@ -53,16 +53,20 @@ for (nm in names(ll)) {
 
     df.g <- df[ii,]
 
-    df.lt <- df.ht <- df.g[df.g$axis == "Tide",]
-    df.ht$tilt[df.ht$tilt < 5.3] <- NA
-    df.lt$tilt[df.lt$tilt > 1] <- NA
+    TILT.START <- 5.3
 
+    df.lt <- df.ht <- df.g[df.g$axis == "Tide",]
+    df.ht$tilt[df.ht$tilt < TILT.START] <- NA
+    df.lt$tilt[df.lt$tilt > 1] <- NA
+    df.hline <- data.frame(axis="Tide", tilt=TILT.START)
+    
     g[[nm]] <- ggplot(df.g[df.g$axis != "Tide",], aes(x=dt,y=runmed(tilt, 201))) +
         geom_line(linewidth=1.2) +
         geom_line(data=df.g[df.g$axis != "Tide",], aes(y=tilt), alpha=.3) +
         geom_line(data=df.g[df.g$axis == "Tide",], aes(y=tilt)) +
-        geom_line(data=df.ht, aes(y=tilt), color="Red", linewidth=1.2) +
-        geom_line(data=df.lt, aes(y=tilt), color="Green", linewidth=1) +
+        geom_line(data=df.ht, aes(y=tilt), color="Red", linewidth=1.3) +
+        geom_line(data=df.lt, aes(y=tilt), color="Green", linewidth=1.3) +
+	geom_hline(data=df.hline, aes(yintercept=tilt)) +
         ylab("") +
         xlab("Date") +
         facet_wrap(~ axis, ncol=1, scales="free_y")
