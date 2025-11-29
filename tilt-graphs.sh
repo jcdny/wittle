@@ -10,4 +10,6 @@ echo "******************** generate tilt graphs as of `date`"
 R --slave -s < daily.R
 R --slave -s < showme.R
 
+rclone sync $DATA/graphs/ s3:j3ff.com/graphs/
+
 echo "******************** graphs done as of `date`"
