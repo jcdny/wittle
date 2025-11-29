@@ -1,12 +1,18 @@
 source("util.R")
 
+IPLOT <- TRUE
+DO.FULL <- FALSE
+
+## Plots to generate c(<days history>, <days forecast>)
+PLOTS <- list(short=c(3,1), medium=c(7,2), long=c(28,14))
+
 tic("read all")
 x <- ts.load()
 toc()
 
 tide <- read_csv(paste0(dataDir(), "/static/tides.csv.gz"))
 tz(tide$dt) <- "America/Los_Angeles"
- 
+
 if (any(is.na(x$dt))) {
     x <- x[-which(is.na(x$dt)), ]
 }
@@ -15,24 +21,26 @@ x <- ts.debias(x)
 
 g <- list()
 
-g[["full-pitch"]] <- ggplot(x, aes(x=dt,y=runmed(x,201))) + geom_line() +
-    geom_line(aes(y=runmed(adj.x,121)), color="blue") +
-    ylab("Tilt (degrees)") +
-    ylim(-.5, NA) +
-    xlab("Date") + ggtitle("Pitch")
+if (DO.FULL) {
+    g[["full-pitch"]] <- ggplot(x, aes(x=dt,y=runmed(x,201))) + geom_line() +
+        geom_line(aes(y=runmed(adj.x,121)), color="blue") +
+        ylab("Tilt (degrees)") +
+        ylim(-.5, NA) +
+        xlab("Date") + ggtitle("Pitch")
 
-if (interactive()) {
-    print(g[1])
-}
+    if (IPLOT && interactive()) {
+        print(g[1])
+    }
 
-g[["full-roll"]] <- ggplot(x, aes(x=dt,y=runmed(y,201))) + geom_line() +
-    geom_line(aes(y=runmed(adj.x,121)), color="blue") +
-    ylab("Tilt (degrees)") +
-    ylim(-1.0, NA) +
-    xlab("Date") + ggtitle("Roll")
+    g[["full-roll"]] <- ggplot(x, aes(x=dt,y=runmed(y,201))) + geom_line() +
+        geom_line(aes(y=runmed(adj.x,121)), color="blue") +
+        ylab("Tilt (degrees)") +
+        ylim(-1.0, NA) +
+        xlab("Date") + ggtitle("Roll")
 
-if (interactive()) {
-    print(g[["full-roll"]])
+    if (IPLOT && interactive()) {
+        print(g[["full-roll"]])
+    }
 }
 
 df <- rbind(data.frame(dt=x$dt, tilt=x$x, adj=x$adj.x, axis="Pitch")
@@ -42,36 +50,35 @@ df <- rbind(data.frame(dt=x$dt, tilt=x$x, adj=x$adj.x, axis="Pitch")
 
 max.dt <- max(x$dt, na.rm=TRUE)
 
-## Do a short and medium history graph
-ll <- list(short=c(3,1), medium=c(7,2), long=c(28,14))
-
-for (nm in names(ll)) {
-    dd.s <- ll[[nm]][1]
-    dd.e <- ll[[nm]][2]
+for (nm in names(PLOTS)) {
+    dd.s <- PLOTS[[nm]][1]
+    dd.e <- PLOTS[[nm]][2]
 
     ii <- which(df$dt > (max.dt - ddays(dd.s)) & df$dt < max.dt + ddays(dd.e))
 
     df.g <- df[ii,]
 
-    TILT.START <- 5.3
+    TILT.START <- 5.2
+    WORK.LOW <- 1.0
 
     df.lt <- df.ht <- df.g[df.g$axis == "Tide",]
     df.ht$tilt[df.ht$tilt < TILT.START] <- NA
     df.lt$tilt[df.lt$tilt > 1] <- NA
-    df.hline <- data.frame(axis="Tide", tilt=TILT.START)
-    
+    df.hline <- data.frame(axis="Tide", tilt=c(TILT.START, WORK.LOW))
+
     g[[nm]] <- ggplot(df.g[df.g$axis != "Tide",], aes(x=dt,y=runmed(tilt, 201))) +
         geom_line(linewidth=1.2) +
         geom_line(data=df.g[df.g$axis != "Tide",], aes(y=tilt), alpha=.3) +
         geom_line(data=df.g[df.g$axis == "Tide",], aes(y=tilt)) +
         geom_line(data=df.ht, aes(y=tilt), color="Red", linewidth=1.3) +
         geom_line(data=df.lt, aes(y=tilt), color="Green", linewidth=1.3) +
-	geom_hline(data=df.hline, aes(yintercept=tilt)) +
+        geom_hline(data=df.hline, aes(yintercept=tilt), alpha=.3) +
+        geom_hline(data=df.hline, aes(yintercept=tilt), alpha=.3, color="blue") +
         ylab("") +
         xlab("Date") +
         facet_wrap(~ axis, ncol=1, scales="free_y")
 
-    if (interactive()) {
+    if (IPLOT && interactive()) {
         print(g[[nm]])
     }
 }

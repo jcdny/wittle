@@ -15,7 +15,7 @@ dataDir <- function() {
         }
     }
     if (DATA == "" || !file.exists(DATA)) {
-        stop("No data directory found ", DATA)
+        stop("Data directory not found ", DATA)
     }
 
     DATA
