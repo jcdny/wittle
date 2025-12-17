@@ -21,13 +21,13 @@ dataDir <- function() {
     DATA
 }
 
-ts.adj <- function(df, from, to, adj) {
+ts.adj <- function(df, from, to, adj, scale=1.0) {
     f.dt <- ymd_hms(from, tz="America/Los_Angeles")
     e.dt <- ymd_hms(to, tz="America/Los_Angeles")
 
     ii <- which(df$dt > f.dt & df$dt < e.dt)
     if (any(ii)) {
-        df$x[ii] <- df$x[ii] + adj
+        df$x[ii] <- (df$x[ii] + adj)*scale
     } else {
         ## warning(paste("no points in range", from, to))
     }
@@ -112,6 +112,7 @@ ts.adjustments <- function(x) {
 
     ## adjust all prior data to new normal
     x <- ts.adj(x,"2025-01-01T00:00:00", "2025-07-06T21:16:38", -.17)
+    x <- ts.adj(x, "2025-11-29T20:10:00", "2030-01-01T00:00:00", 0.0, -1.0)
 
     x
 }
