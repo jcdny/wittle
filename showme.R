@@ -4,7 +4,7 @@ IPLOT <- TRUE
 DO.FULL <- FALSE
 
 ## Plots to generate c(<days history>, <days forecast>)
-PLOTS <- list(short=c(3,1), medium=c(7,2), long=c(28,14), raw=c(7,0))
+PLOTS <- list(short=c(3,1), medium=c(7,2), long=c(28,14), raw=c(5,0))
 
 tic("read all")
 x <- ts.load()
