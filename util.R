@@ -2,6 +2,7 @@ library(lubridate, warn.conflicts=FALSE)
 library(ggplot2, warn.conflicts=FALSE)
 library(readr, warn.conflicts=FALSE)
 library(dplyr, warn.conflicts=FALSE)
+library(stringr)
 library(tictoc)
 
 dataDir <- function() {

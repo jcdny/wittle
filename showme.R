@@ -6,12 +6,12 @@ DO.FULL <- FALSE
 ## Plots to generate c(<days history>, <days forecast>)
 PLOTS <- list(short=c(3,1), medium=c(7,2), long=c(28,14), raw=c(5,0))
 
+tide <- read_csv(paste0(dataDir(), "/static/tides.csv.gz"))
+tz(tide$dt) <- "America/Los_Angeles"
+
 tic("read all")
 x <- ts.load()
 toc()
-
-tide <- read_csv(paste0(dataDir(), "/static/tides.csv.gz"))
-tz(tide$dt) <- "America/Los_Angeles"
 
 if (any(is.na(x$dt))) {
     x <- x[-which(is.na(x$dt)), ]
@@ -20,6 +20,20 @@ x <- ts.adjustments(x)
 x <- ts.debias(x)
 
 g <- list()
+
+tg <- tide %>%
+    mutate(day = date(dt)) %>%
+    filter(day >= (Sys.time() - ddays(2)) & day < (Sys.time() + ddays(90))) %>%
+    group_by(day) %>%
+    dplyr::summarise(
+               max.ht = max(pred)
+             , min.lt = min(pred)
+             , danger = ifelse(max.ht > 5.6, "HIGH","OK")
+           )
+
+g[["tide"]] <- ggplot(tg, aes(x = day, y=max.ht, color=danger)) +
+    geom_point(size = 12) +
+    ylim(4, 8)
 
 if (DO.FULL) {
     g[["full-pitch"]] <- ggplot(x, aes(x=dt,y=runmed(x,201))) + geom_line() +
@@ -96,9 +110,23 @@ H <- 2160
 SZ <- 44
 LSZ <- 2
 
+
 for (plt in names(g)) {
     outf <- paste0(dataDir(), "/graphs/", plt, ".png")
     png(file=outf, width=W, height=H)
     print(g[[plt]] + theme_classic(base_size = SZ))
     dev.off()
 }
+
+tmpl <- read_file(paste0(dataDir(),"/static/display.html.tmpl"))
+
+xx <- x[nrow(x),c("dt","ax","ay")]
+vars <- list(
+    asof = strftime(Sys.time(), "%Y-%m-%d %H:%M")
+  , lastobs = strftime(xx$dt,"%Y-%m-%d %H:%M:%S")
+  , lasttilt = xx$ax
+  , lastpitch = xx$ay
+)
+
+out <- str_interp(tmpl, vars)
+write_file(out, paste0(dataDir(), "/graphs/display.html"))
