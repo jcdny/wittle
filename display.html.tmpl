@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <title>Tide Graohs</title>
+    <title>Tide Graphs</title>
     <style>
       body {
           font-family: Arial, sans-serif;
@@ -42,12 +42,16 @@
           border-radius: 6px;
           box-shadow: 0 0 10px rgba(0,0,0,0.2);
       }
+      .warn {
+          color: #f42;
+          font-weight: bold;
+      }
     </style>
   </head>
   <body>
     <h2>RUN ${asof}</h2>
     <p>
-      last observation ${lastobs} tilt ${lasttilt} pitch ${lastpitch}
+      last observation ${lastobs} tilt ${lasttilt} pitch ${lastpitch} ${warn}
     </p>
     <div class="tab-buttons">
       <button class="tab-btn active" onclick="openTab(0)">Short</button>

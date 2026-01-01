@@ -148,9 +148,14 @@ xx <- x[nrow(x),c("dt","ax","ay")]
 vars <- list(
     asof = strftime(Sys.time(), "%Y-%m-%d %H:%M")
   , lastobs = strftime(xx$dt,"%Y-%m-%d %H:%M:%S")
+  , warn = ""
   , lasttilt = xx$ax
   , lastpitch = xx$ay
 )
+
+if ((Sys.time() - xx$dt) > as.difftime(4000, units="secs")) {
+    vars$warn <- "<span class='warn'>OLD OLD OLD OLD</span>"
+}
 
 out <- str_interp(tmpl, vars)
 write_file(out, paste0(dataDir(), "/graphs/display.html"))
