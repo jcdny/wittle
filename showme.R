@@ -19,6 +19,10 @@ if (any(is.na(x$dt))) {
 x <- ts.adjustments(x)
 x <- ts.debias(x)
 
+## NA for any gap > 10 min
+ii <- which(diff(x$dt) > as.difftime(600, units="secs"))
+x[ii+1, colnames(x %>% select(-dt,-day))] <- NA
+
 g <- list()
 
 tg <- tide %>%
