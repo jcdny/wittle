@@ -90,10 +90,10 @@ ts.load.all <- function() {
         ay = col_double(),
         az = col_double()
     )
-    p <- pipe(paste0("(cd ", data.dir, "/data; echo \"dt,x,y,z,ax,ay,az\"; cat `ls -1 2025*.csv | sort`)"))
-
+    p <- pipe(paste0("(cd ", data.dir, "/data; echo \"dt,x,y,z,ax,ay,az\"; cat `ls -1 20251*.csv 2026*.csv | sort`)"))
+    cat("starting read all\n")
     x <- read_csv(p, col_types = cspec)
-
+    cat("done read all\n")
     x$dt <- ymd_hms(x$dt, tz="America/Los_Angeles")
 
     x$day <- date(x$dt)
