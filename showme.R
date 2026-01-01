@@ -4,7 +4,11 @@ IPLOT <- TRUE
 DO.FULL <- FALSE
 
 ## Plots to generate c(<days history>, <days forecast>)
-PLOTS <- list(short=c(3,1), medium=c(7,2), long=c(28,14), raw=c(5,0))
+PLOTS <- list(
+    short=c(3,1)
+  , medium=c(7,2)
+  , long=c(28,14)
+  , raw=c(5,0))
 
 tide <- read_csv(paste0(dataDir(), "/static/tides.csv.gz"))
 tz(tide$dt) <- "America/Los_Angeles"
@@ -40,21 +44,25 @@ g[["tide"]] <- ggplot(tg, aes(x = day, y=max.ht, color=danger)) +
     ylim(4, 8)
 
 if (DO.FULL) {
-    g[["full-pitch"]] <- ggplot(x, aes(x=dt,y=runmed(x,201))) + geom_line() +
-        geom_line(aes(y=runmed(adj.x,121)), color="blue") +
+    g[["full-pitch"]] <- ggplot(x, aes(x=dt, y=runmed(x, 201, na.action="na.omit"))) +
+        geom_line() +
+        geom_line(aes(y=runmed(adj.x, 121, na.action="na.omit")), color="blue") +
         ylab("Tilt (degrees)") +
         ylim(-.5, NA) +
-        xlab("Date") + ggtitle("Pitch")
+        xlab("Date") +
+        ggtitle("Pitch")
 
     if (IPLOT && interactive()) {
         print(g[1])
     }
 
-    g[["full-roll"]] <- ggplot(x, aes(x=dt,y=runmed(y,201))) + geom_line() +
-        geom_line(aes(y=runmed(adj.x,121)), color="blue") +
+    g[["full-roll"]] <- ggplot(x, aes(x=dt,y=runmed(y, 201, na.action="na.omit"))) +
+        geom_line() +
+        geom_line(aes(y=runmed(adj.y, 121, na.action="na.omit")), color="blue") +
         ylab("Tilt (degrees)") +
         ylim(-1.0, NA) +
-        xlab("Date") + ggtitle("Roll")
+        xlab("Date") +
+        ggtitle("Roll")
 
     if (IPLOT && interactive()) {
         print(g[["full-roll"]])
@@ -72,32 +80,44 @@ for (nm in names(PLOTS)) {
     dd.s <- PLOTS[[nm]][1]
     dd.e <- PLOTS[[nm]][2]
 
-    ii <- which(df$dt > (max.dt - ddays(dd.s)) & df$dt < max.dt + ddays(dd.e))
-
-    df.g <- df[ii,]
+    df.g <- df %>%
+        filter(
+            dt > max.dt - ddays(dd.s)
+          & dt < max.dt + ddays(dd.e)
+        )
 
     TILT.START <- 5.2
     WORK.LOW <- 1.0
 
-    df.lt <- df.ht <- df.g[df.g$axis == "Tide",]
+    df.lt <- df.ht <- df.g %>% filter(axis == "Tide")
     df.ht$tilt[df.ht$tilt < TILT.START] <- NA
-    df.lt$tilt[df.lt$tilt > 1] <- NA
+    df.lt$tilt[df.lt$tilt > WORK.LOW] <- NA
+
     df.hline <- data.frame(axis="Tide", tilt=c(TILT.START, WORK.LOW))
+
     if (nm == "raw") {
-        g[[nm]] <- ggplot(df.g[df.g$axis != "Tide",], aes(x=dt, y=runmed(raw, 201))) +
-              geom_line(linewidth=1.2) +
-              ylab("") +
-              xlab("Date") +
-              facet_wrap(~ axis, ncol=1, scales="free_y")
-    } else {
-        g[[nm]] <- ggplot(df.g[df.g$axis != "Tide",], aes(x=dt, y=runmed(tilt, 201))) +
+        df.raw <- df.g %>%
+            filter(axis != "Tide") %>%
+            group_by(axis) %>%
+            mutate(
+                raw.sm = runmed(raw, 201, na.action="na.omit")
+            )
+
+        g[[nm]] <- ggplot(df.raw, aes(x = dt, y = raw.sm)) +
             geom_line(linewidth=1.2) +
-            geom_line(data=df.g[df.g$axis != "Tide",], aes(y=tilt), alpha=.3) +
-            geom_line(data=df.g[df.g$axis == "Tide",], aes(y=tilt)) +
-            geom_line(data=df.ht, aes(y=tilt), color="Red", linewidth=1.3) +
-            geom_line(data=df.lt, aes(y=tilt), color="Green", linewidth=1.3) +
-            geom_hline(data=df.hline, aes(yintercept=tilt), alpha=.3) +
-            geom_hline(data=df.hline, aes(yintercept=tilt), alpha=.3, color="blue") +
+            ylab("") +
+            xlab("Date") +
+            facet_wrap(~ axis, ncol=1, scales="free_y")
+    } else {
+        g[[nm]] <- ggplot(df.g %>% filter(axis != "Tide")
+                        , aes(x = dt, y = runmed(tilt, 201, na.action="na.omit"))) +
+            geom_line(linewidth = 1.2) +
+            geom_line(data=df.g %>% filter(axis != "Tide"), aes(y = tilt), alpha=.3) +
+            geom_line(data=df.g %>% filter(axis == "Tide"), aes(y = tilt)) +
+            geom_line(data=df.ht, aes(y = tilt), color="Red", linewidth = 1.3) +
+            geom_line(data=df.lt, aes(y = tilt), color="Green", linewidth = 1.3) +
+            geom_hline(data=df.hline, aes(yintercept = tilt), alpha=.3) +
+            geom_hline(data=df.hline, aes(yintercept = tilt), alpha=.3, color="blue") +
             ylab("") +
             xlab("Date") +
             facet_wrap(~ axis, ncol=1, scales="free_y")
