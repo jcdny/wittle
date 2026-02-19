@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <title>Tide Graphs</title>
+     <script src='elapsed.js'></script>
     <style>
       body {
           font-family: Arial, sans-serif;
@@ -51,8 +52,9 @@
   <body>
     <h2>RUN ${asof}</h2>
     <p>
-      last observation ${lastobs} tilt ${lasttilt} pitch ${lastpitch} ${warn}
+      last observation <span id="lastobs"></span> ago tilt ${lasttilt} pitch ${lastpitch} ${warn}
     </p>
+    <script>startElapsedTimer("${lastobs}", "lastobs");</script>
     <div class="tab-buttons">
       <button class="tab-btn active" onclick="openTab(0)">Short</button>
       <button class="tab-btn" onclick="openTab(1)">Medium</button>

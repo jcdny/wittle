@@ -147,7 +147,7 @@ tmpl <- read_file(paste0(dataDir(),"/static/display.html.tmpl"))
 xx <- x[nrow(x),c("dt","ax","ay")]
 vars <- list(
     asof = strftime(Sys.time(), "%Y-%m-%d %H:%M")
-  , lastobs = strftime(xx$dt,"%Y-%m-%d %H:%M:%S")
+  , lastobs = strftime(xx$dt,"%Y-%m-%dT%H:%M:%S")
   , warn = ""
   , lasttilt = xx$ax
   , lastpitch = xx$ay
