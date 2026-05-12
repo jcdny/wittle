@@ -39,8 +39,8 @@ tg <- tide %>%
              , danger = ifelse(max.ht > 5.6, "HIGH","OK")
            )
 
-g[["tide"]] <- ggplot(tg, aes(x = day, y=max.ht, color=danger)) +
-    geom_point(size = 12) +
+g[["tide"]] <- ggplot(tg, aes(x = day, y=max.ht, color=danger, label=day(day))) +
+    geom_text(size = 12) +
     ylim(4, 8)
 
 if (DO.FULL) {
